@@ -1,15 +1,11 @@
-<script>
-    let board = [
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-    ];
+<script lang="ts">
+    let painting = false;
 
-    function get_live_nieghbors(x, y) {
+    let board = Array(10)
+        .fill(0)
+        .map(() => Array(80).fill(0));
+
+    function get_live_nieghbors(x: number, y: number) {
         // check if we are on the edge, for each and don't index out of bounds
 
         let live_neighbors = 0;
@@ -33,8 +29,8 @@
     }
 
     function next_generation() {
-        const new_board = board.map((row, x) =>
-            row.map((cell, y) => {
+        const new_board = structuredClone(board).map((row, x) =>
+            row.map((cell: number, y: number) => {
                 const live_neighbors = get_live_nieghbors(x, y);
                 if (cell === 1) {
                     if (live_neighbors < 2 || live_neighbors > 3) {
@@ -50,6 +46,8 @@
             }),
         );
         board = new_board;
+
+        setTimeout(next_generation, 100);
     }
 </script>
 
@@ -62,14 +60,30 @@
     >
         start
     </button>
-    <div class="grid grid-rows-7 grid-cols-7 gap-2">
-        {#each board as row}
-            {#each row as cell}
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <div
+        class="custom-grid rounded-lg overflow-clip shadow-lg"
+        on:mousedown={() => (painting = !painting)}
+        on:mouseup={() => (painting = !painting)}
+    >
+        {#each board as row, i}
+            {#each row as cell, j}
                 <button
-                    on:click={() => (cell = cell == 0 ? 1 : 0)}
-                    class={`w-20 h-20 ${cell == 0 ? "bg-black/80" : "bg-white"} rounded-md shadow-md`}
+                    on:mouseenter={() =>
+                        painting && (board[i][j] = cell == 0 ? 1 : 0)}
+                    on:click={() => (board[i][j] = cell == 0 ? 1 : 0)}
+                    class={`w-8 h-8 ${cell == 0 ? "bg-black/80" : "bg-white"} shadow-md`}
                 ></button>
             {/each}
         {/each}
     </div>
 </main>
+
+<style>
+    .custom-grid {
+        display: grid;
+        grid-template-columns: repeat(20, 1fr);
+        grid-auto-rows: minmax(0, auto);
+    }
+</style>
