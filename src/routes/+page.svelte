@@ -1,9 +1,10 @@
 <script lang="ts">
     let painting = false;
+    let size = 40;
 
-    let board = Array(10)
+    let board = Array(size)
         .fill(0)
-        .map(() => Array(80).fill(0));
+        .map(() => Array(size).fill(0));
 
     function get_live_nieghbors(x: number, y: number) {
         // check if we are on the edge, for each and don't index out of bounds
@@ -28,6 +29,7 @@
         return live_neighbors;
     }
 
+    let running = false;
     function next_generation() {
         const new_board = structuredClone(board).map((row, x) =>
             row.map((cell: number, y: number) => {
@@ -45,25 +47,45 @@
                 }
             }),
         );
+
         board = new_board;
 
-        setTimeout(next_generation, 100);
+        if (running) {
+            setTimeout(next_generation, 100);
+        }
     }
 </script>
 
 <main
     class="w-full mx-auto items-center justify-center h-screen flex bg-gray-50 flex-col gap-4"
 >
-    <button
-        class="bg-green-400 text-white font-mono text-xl rounded-lg p-4 shadow-md font-bold"
-        on:click={next_generation}
-    >
-        start
-    </button>
+    <span class="flex flex-row gap-4">
+        <button
+            class={`${running ? "bg-red-400" : "bg-green-400"} text-white font-mono text-xl rounded-lg p-4 shadow-md font-bold`}
+            on:click={() => {
+                running = !running;
+                next_generation();
+            }}
+        >
+            {running ? "Stop" : "Start"}
+        </button>
+        <button
+            class={`text-white bg-orange-400 font-mono text-xl rounded-lg p-4 shadow-md font-bold`}
+            on:click={() => {
+                running = false;
+                board = Array(size)
+                    .fill(0)
+                    .map(() => Array(size).fill(0));
+            }}
+        >
+            Clear
+        </button>
+    </span>
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
-        class="custom-grid rounded-lg overflow-clip shadow-lg"
+        class="rounded-lg overflow-clip shadow-lg"
+        style={`display: grid; grid-template-columns: repeat(${size}, 1fr); grid-auto-rows: minmax(0, auto); `}
         on:mousedown={() => (painting = !painting)}
         on:mouseup={() => (painting = !painting)}
     >
@@ -73,17 +95,18 @@
                     on:mouseenter={() =>
                         painting && (board[i][j] = cell == 0 ? 1 : 0)}
                     on:click={() => (board[i][j] = cell == 0 ? 1 : 0)}
-                    class={`w-8 h-8 ${cell == 0 ? "bg-black/80" : "bg-white"} shadow-md`}
+                    class={`${cell == 0 ? "bg-black/80" : "bg-white"} shadow-md`}
+                    style={`width: ${(4 * size) / 10}px; height: ${(4 * size) / 10}px;`}
                 ></button>
             {/each}
         {/each}
     </div>
 </main>
 
-<style>
-    .custom-grid {
-        display: grid;
-        grid-template-columns: repeat(20, 1fr);
-        grid-auto-rows: minmax(0, auto);
-    }
-</style>
+<!-- <style> -->
+<!--     .custom-grid { -->
+<!--         display: grid; -->
+<!--         grid-template-columns: repeat(size, 1fr); -->
+<!--         grid-auto-rows: minmax(0, auto); -->
+<!--     } -->
+<!-- </style> -->
